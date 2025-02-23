@@ -1,8 +1,10 @@
 import javafx.application.Application;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -38,39 +40,39 @@ public class Interfaz extends Application{
         //Creamos la etiqueta del nombre
         Label nameLabel = new Label("Name");
         nameLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-        nameLabel.setLayoutX(150);
+        nameLabel.setLayoutX(60);
         nameLabel.setLayoutY(300);
         root.getChildren().addAll(nameLabel);
 
         //Creamos el cuadro de texto donde se ingresara el nombre
         TextField namTextField = new TextField();
-        namTextField.setLayoutX(105);
+        namTextField.setLayoutX(20);
         namTextField.setLayoutY(330);
         root.getChildren().add(namTextField);
 
         //Creamos la etiqueta de la direccion
         Label addressLabel = new Label("Address");
         addressLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-        addressLabel.setLayoutX(140);
+        addressLabel.setLayoutX(60);
         addressLabel.setLayoutY(370);
         root.getChildren().add(addressLabel);
 
         //Creamos el cuadro de texto donde se ingresara la direccion
         TextField addressTextField = new TextField();
-        addressTextField.setLayoutX(105);
+        addressTextField.setLayoutX(20);
         addressTextField.setLayoutY(400);
         root.getChildren().add(addressTextField);
 
         //Creamos la etiqueta del numero de telefono
         Label phoneLabel = new Label("Phone");
         phoneLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-        phoneLabel.setLayoutX(150);
+        phoneLabel.setLayoutX(60);
         phoneLabel.setLayoutY(440);
         root.getChildren().add(phoneLabel);
 
         //Creamos el cuadro de texto donde se ingresara el telefono
         TextField phoneTextField = new TextField();
-        phoneTextField.setLayoutX(105);
+        phoneTextField.setLayoutX(20);
         phoneTextField.setLayoutY(470);
         root.getChildren().add(phoneTextField);
 
@@ -80,22 +82,96 @@ public class Interfaz extends Application{
         saveButton.setLayoutX(30);
         saveButton.setLayoutY(530);
 
+        //Vehiculos
+        Label labelVehicle = new Label("Vehicles");
+        labelVehicle.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        labelVehicle.setLayoutX(220);
+        labelVehicle.setLayoutY(300);
+        root.getChildren().add(labelVehicle);
+
+        CheckBox carBox = new CheckBox("Car");
+        carBox.setFont(Font.font("Arial", FontWeight.BOLD, 15));
+        carBox.setLayoutX(220);
+        carBox.setLayoutY(330);
+        root.getChildren().add(carBox);
+
+        CheckBox truckBox = new CheckBox("Truck");
+        truckBox.setFont(Font.font("Arial", FontWeight.BOLD, 15));
+        truckBox.setLayoutX(220);
+        truckBox.setLayoutY(360);
+        root.getChildren().add(truckBox);
+
+        CheckBox shipBox = new CheckBox("Ship");
+        shipBox.setFont(Font.font("Arial", FontWeight.BOLD, 15));
+        shipBox.setLayoutX(220);
+        shipBox.setLayoutY(390);
+        root.getChildren().add(shipBox);
+
+        CheckBox motorCycleBox = new CheckBox("MotorCycle");
+        motorCycleBox.setFont(Font.font("Arial", FontWeight.BOLD, 15));
+        motorCycleBox.setLayoutX(220);
+        motorCycleBox.setLayoutY(420);
+        root.getChildren().add(motorCycleBox);
+
+        CheckBox bicycleBox = new CheckBox("Bicycle");
+        bicycleBox.setFont(Font.font("Arial", FontWeight.BOLD, 15));
+        bicycleBox.setLayoutX(220);
+        bicycleBox.setLayoutY(450);
+        root.getChildren().add(bicycleBox);
+
         //Accion del boton
+        // saveButton.setOnAction(e -> {
+        //     String name = namTextField.getText();
+        //     String address = addressTextField.getText();
+        //     String phone = phoneTextField.getText();
+
+        //     if (name.isEmpty() || address.isEmpty() || phone.isEmpty()){
+        //         showAlert("Error", "All data is necessary");
+        //         return;
+        //     }
+
+        //     Database.insertEmployee(name, address, phone);
+        //     table.setItems(Database.getList());
+        //     showAlert(":D", "Data was saved seccessfully");
+        // });
+
         saveButton.setOnAction(e -> {
             String name = namTextField.getText();
             String address = addressTextField.getText();
             String phone = phoneTextField.getText();
-
+        
             if (name.isEmpty() || address.isEmpty() || phone.isEmpty()){
                 showAlert("Error", "All data is necessary");
                 return;
             }
-
+        
+            // Insertamos el empleado en la base de datos
             Database.insertEmployee(name, address, phone);
+            int employeeId = Database.getIdEmployeed(name, address, phone); // Obtener el ID del empleado recién insertado
+        
+            // Ahora, insertamos los vehículos asociados
+            if (carBox.isSelected()) {
+                Database.insertVehicle("Car", employeeId);
+            }
+            if (truckBox.isSelected()) {
+                Database.insertVehicle("Truck", employeeId);
+            }
+            if (shipBox.isSelected()) {
+                Database.insertVehicle("Ship", employeeId);
+            }
+            if (motorCycleBox.isSelected()) {
+                Database.insertVehicle("MotorCycle", employeeId);
+            }
+            if (bicycleBox.isSelected()) {
+                Database.insertVehicle("Bicycle", employeeId);
+            }
+        
+            // Actualizar la tabla de empleados
             table.setItems(Database.getList());
-            showAlert(":D", "Data was saved seccessfully");
+            // showAlert(":D", "Data was saved successfully");
         });
-        root.getChildren().add(saveButton);
+
+        root.getChildren().add(saveButton);        
 
         //Boton para eliminar a un empleado
         Button deleteButton = new Button("Delete");
@@ -168,9 +244,22 @@ public class Interfaz extends Application{
         //Creamos la columna para el numero de telefono
         TableColumn<Employee, String> phone = new TableColumn<Employee, String>("Phone");
         phone.setCellValueFactory(data -> data.getValue().phoneProperty());
+        
+        TableColumn<Employee, String> vehiclesColumn = new TableColumn<>("Vehicles");
+        vehiclesColumn.setCellValueFactory(data -> {
+            Employee employee = data.getValue();
+            // Obtener el ID del empleado usando los datos disponibles (nombre, dirección, teléfono)
+            int employeeId = Database.getIdEmployeed(employee.getName(), employee.getAddress(), employee.getPhone());
+    
+            // Obtener los vehículos usando el ID
+            String vehicles = Database.getEmployeeVehicles(employeeId);
+    
+            // Devolver los vehículos como un SimpleStringProperty para la columna
+            return new SimpleStringProperty(vehicles);
+        });
 
         //Agregamos las columnas a la tabla
-        table.getColumns().addAll(names, address, phone);
+        table.getColumns().addAll(names, address, phone, vehiclesColumn);
         //Hacemos que todo el tamano de la tabla se use entre las columnas totales
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -178,10 +267,9 @@ public class Interfaz extends Application{
 
         //Obtenemos los datos de MySQL
         employees = Database.getList();
+        System.out.println(Database.getEmployeeVehicles(1));
         table.setItems(employees);
         
-
-
         Scene scene = new Scene(root, 900, 600);
     
         primaryStage.setTitle("CRUD");

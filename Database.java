@@ -4,6 +4,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -25,7 +27,7 @@ public class Database {
         }
     } 
 
-    //Metodo para agregar a un empleado a la clase de datos
+    // //Metodo para agregar a un empleado a la clase de datos
     public static void insertEmployee(String name, String address, String phone){
         //String de la consulta de MySQL, los parametros se ponene con ?
         String sql = "insert into employees (name, address, phone) values (?, ?, ?)";
@@ -42,6 +44,18 @@ public class Database {
         }
     }
 
+    public static void insertVehicle(String vehicleName, int employeeId) {
+        String query = "INSERT INTO vehicles (vehicle_name, employee_id) VALUES (?, ?)";
+        try (Connection conn = Database.connect();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, vehicleName);
+            stmt.setInt(2, employeeId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
     //Metodo para mostrar la tabla de empleados
     public static void showEmployees(){
         //String de la consulta de MySQL
@@ -162,4 +176,31 @@ public class Database {
             e.printStackTrace();
         }
     }
+
+    public static String getEmployeeVehicles(int employeeId) {
+        // Consulta para obtener los vehículos asociados al empleado
+        String query = "SELECT vehicle_name FROM vehicles WHERE employee_id = ?";
+        StringBuilder vehicles = new StringBuilder();
+        
+        try (Connection conn = Database.connect();
+             PreparedStatement statement = conn.prepareStatement(query)) {
+            
+            statement.setInt(1, employeeId);
+            
+            ResultSet resultSet = statement.executeQuery();
+            
+            // Recorre los resultados y agrega los vehículos a la lista
+            while (resultSet.next()) {
+                if (vehicles.length() > 0) {
+                    vehicles.append(", ");  // Separador de vehículos
+                }
+                vehicles.append(resultSet.getString("vehicle_name"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+        return vehicles.toString();
+    }
+    
 }
